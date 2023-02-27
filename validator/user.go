@@ -5,6 +5,10 @@
 package validator // import "miniflux.app/validator"
 
 import (
+	"reflect"
+	"strings"
+
+	"golang.org/x/exp/slices"
 	"miniflux.app/locale"
 	"miniflux.app/model"
 	"miniflux.app/storage"
@@ -97,6 +101,18 @@ func ValidateUserModification(store *storage.Storage, userID int64, changes *mod
 		}
 	}
 
+	if changes.BlockFilterEntryRules != nil {
+		if !isValidFilterRules(*changes.BlockFilterEntryRules) {
+			return NewValidationError("error.settings_invalid_block_filter_entry_rules")
+		}
+	}
+
+	if changes.KeepFilterEntryRules != nil {
+		if !isValidFilterRules(*changes.KeepFilterEntryRules) {
+			return NewValidationError("error.settings_invalid_keep_filter_entry_rules")
+		}
+	}
+
 	return nil
 }
 
@@ -169,4 +185,36 @@ func validateDefaultHomePage(defaultHomePage string) *ValidationError {
 		return NewValidationError("error.invalid_default_home_page")
 	}
 	return nil
+}
+
+func isValidFilterRules(filterEntryRules string) bool {
+	// Valid Format: FieldName(RegEx)~FieldName(RegEx)~...
+
+	t := reflect.TypeOf(model.Entry{})
+	names := make([]string, t.NumField())
+	for i := range names {
+		names[i] = t.Field(i).Name
+	}
+
+	rules := strings.Split(filterEntryRules, "~")
+	for _, rule := range rules {
+		// Validate Rule Syntax
+		if !strings.Contains(rule, "(") || !strings.Contains(rule, ")") {
+			return false
+		}
+
+		// Split FieldName and RegEx
+		parts := strings.SplitN(rule, "(", 2)
+		parts[1] = parts[1][:len(parts)-1]
+
+		// Not a property of model.Entry
+		if !slices.Contains(names, parts[0]) {
+			return false
+		}
+
+		if !IsValidRegex(parts[1]) {
+			return false
+		}
+	}
+	return true
 }
