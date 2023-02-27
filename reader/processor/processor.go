@@ -47,7 +47,7 @@ func ProcessFeedEntries(store *storage.Storage, feed *model.Feed, user *model.Us
 	for _, entry := range feed.Entries {
 		logger.Debug("[Processor] Processing entry %q from feed %q", entry.URL, feed.FeedURL)
 
-		if isBlockedEntry(feed, entry) || !isAllowedEntry(feed, entry) {
+		if isBlockedEntry(user, feed, entry) || !isAllowedEntry(user, feed, entry) {
 			continue
 		}
 
@@ -116,7 +116,41 @@ func ProcessFeedEntries(store *storage.Storage, feed *model.Feed, user *model.Us
 	feed.Entries = filteredEntries
 }
 
-func isBlockedEntry(feed *model.Feed, entry *model.Entry) bool {
+func isBlockedEntry(user *model.User, feed *model.Feed, entry *model.Entry) bool {
+	if user.BlockFilterEntryRules != "" {
+		rules := strings.Split(user.BlockFilterEntryRules, "~")
+		for _, rule := range rules {
+			parts := strings.SplitN(rule, "(", 2)
+			parts[1] = parts[1][:len(parts[1])-1]
+
+			var match bool
+			if parts[0] == "Title" {
+				match, _ = regexp.MatchString(parts[1], entry.Title)
+			} else if parts[0] == "URL" {
+				match, _ = regexp.MatchString(parts[1], entry.URL)
+			} else if parts[0] == "CommentsURL" {
+				match, _ = regexp.MatchString(parts[1], entry.CommentsURL)
+			} else if parts[0] == "Content" {
+				match, _ = regexp.MatchString(parts[1], entry.Content)
+			} else if parts[0] == "Author" {
+				match, _ = regexp.MatchString(parts[1], entry.Author)
+			} else if parts[0] == "Tags" {
+				for i := range entry.Tags {
+					match, _ = regexp.MatchString(parts[1], entry.Tags[i])
+					if match {
+						// Found!
+						break
+					}
+				}
+			}
+
+			if match {
+				logger.Debug("[Processor] Blocking entry %q from feed %q based on rule %q", entry.Title, feed.FeedURL, rule)
+				return true
+			}
+		}
+	}
+
 	if feed.BlocklistRules != "" {
 		match, _ := regexp.MatchString(feed.BlocklistRules, entry.Title)
 		if match {
@@ -127,7 +161,42 @@ func isBlockedEntry(feed *model.Feed, entry *model.Entry) bool {
 	return false
 }
 
-func isAllowedEntry(feed *model.Feed, entry *model.Entry) bool {
+func isAllowedEntry(user *model.User, feed *model.Feed, entry *model.Entry) bool {
+	if user.KeepFilterEntryRules != "" {
+		rules := strings.Split(user.KeepFilterEntryRules, "~")
+		for _, rule := range rules {
+			parts := strings.SplitN(rule, "(", 2)
+			parts[1] = parts[1][:len(parts[1])-1]
+
+			var match bool
+			if parts[0] == "Title" {
+				match, _ = regexp.MatchString(parts[1], entry.Title)
+			} else if parts[0] == "URL" {
+				match, _ = regexp.MatchString(parts[1], entry.URL)
+			} else if parts[0] == "CommentsURL" {
+				match, _ = regexp.MatchString(parts[1], entry.CommentsURL)
+			} else if parts[0] == "Content" {
+				match, _ = regexp.MatchString(parts[1], entry.Content)
+			} else if parts[0] == "Author" {
+				match, _ = regexp.MatchString(parts[1], entry.Author)
+			} else if parts[0] == "Tags" {
+				for i := range entry.Tags {
+					match, _ = regexp.MatchString(parts[1], entry.Tags[i])
+					if match {
+						// Found!
+						break
+					}
+				}
+			}
+
+			if match {
+				logger.Debug("[Processor] Allow entry %q from feed %q based on rule %q", entry.Title, feed.FeedURL, rule)
+				return true
+			}
+		}
+		return false
+	}
+
 	if feed.KeeplistRules != "" {
 		match, _ := regexp.MatchString(feed.KeeplistRules, entry.Title)
 		if match {
