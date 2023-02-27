@@ -35,6 +35,8 @@ type User struct {
 	CJKReadingSpeed        int        `json:"cjk_reading_speed"`
 	DefaultHomePage        string     `json:"default_home_page"`
 	CategoriesSortingOrder string     `json:"categories_sorting_order"`
+	BlockFilterEntryRules  string     `json:"block_filter_entry_rules"`
+	KeepFilterEntryRules   string     `json:"keep_filter_entry_rules"`
 }
 
 // UserCreationRequest represents the request to create a user.
@@ -69,6 +71,8 @@ type UserModificationRequest struct {
 	CJKReadingSpeed        *int    `json:"cjk_reading_speed"`
 	DefaultHomePage        *string `json:"default_home_page"`
 	CategoriesSortingOrder *string `json:"categories_sorting_order"`
+	BlockFilterEntryRules  *string `json:"block_filter_entry_rules"`
+	KeepFilterEntryRules   *string `json:"keep_filter_entry_rules"`
 }
 
 // Patch updates the User object with the modification request.
@@ -155,6 +159,14 @@ func (u *UserModificationRequest) Patch(user *User) {
 
 	if u.CategoriesSortingOrder != nil {
 		user.CategoriesSortingOrder = *u.CategoriesSortingOrder
+	}
+
+	if u.BlockFilterEntryRules != nil {
+		user.BlockFilterEntryRules = *u.BlockFilterEntryRules
+	}
+
+	if u.KeepFilterEntryRules != nil {
+		user.KeepFilterEntryRules = *u.KeepFilterEntryRules
 	}
 }
 
