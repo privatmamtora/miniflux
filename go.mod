@@ -33,6 +33,7 @@ require (
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/tdewolff/parse/v2 v2.6.4 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

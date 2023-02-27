@@ -44,6 +44,8 @@ func (h *handler) showSettingsPage(w http.ResponseWriter, r *http.Request) {
 		CJKReadingSpeed:        user.CJKReadingSpeed,
 		DefaultHomePage:        user.DefaultHomePage,
 		CategoriesSortingOrder: user.CategoriesSortingOrder,
+		BlockFilterEntryRules:  user.BlockFilterEntryRules,
+		KeepFilterEntryRules:   user.KeepFilterEntryRules,
 	}
 
 	timezones, err := h.store.Timezones()
