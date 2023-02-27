@@ -5,7 +5,6 @@
 package validator // import "miniflux.app/validator"
 
 import (
-	"reflect"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -189,12 +188,7 @@ func validateDefaultHomePage(defaultHomePage string) *ValidationError {
 
 func isValidFilterRules(filterEntryRules string) bool {
 	// Valid Format: FieldName(RegEx)~FieldName(RegEx)~...
-
-	t := reflect.TypeOf(model.Entry{})
-	names := make([]string, t.NumField())
-	for i := range names {
-		names[i] = t.Field(i).Name
-	}
+	fieldNames := []string{"Title", "URL", "CommentsURL", "Content", "Author", "Tags"}
 
 	rules := strings.Split(filterEntryRules, "~")
 	for _, rule := range rules {
@@ -208,7 +202,7 @@ func isValidFilterRules(filterEntryRules string) bool {
 		parts[1] = parts[1][:len(parts)-1]
 
 		// Not a property of model.Entry
-		if !slices.Contains(names, parts[0]) {
+		if !slices.Contains(fieldNames, parts[0]) {
 			return false
 		}
 
